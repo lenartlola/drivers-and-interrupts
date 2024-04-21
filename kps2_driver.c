@@ -24,21 +24,59 @@ typedef enum {
 
 Modifiers gmodifiers = None;
 
-static irqreturn_t irq_handler(int irq, void* dev_id)
+static int check_for_modifiers(unsigned char scancode)
 {
-	static unsigned char scancode;
-
-	scancode = inb(0x60);
-
-	if (gmodifiers & RShift) {
-		printk(KERN_INFO "kps2: Detected RShift pressed\n");
-		goto FINISH;
+	switch (scancode) {
+		// presses
+		case 0x2A:
+			gmodifiers |= LShift;
+			goto RETURN_SUCCESS;
+			break;
+		case 0x1D:
+			gmodifiers |= LCtrl;
+			goto RETURN_SUCCESS;
+			break;
+		case 0x38:
+			gmodifiers |= LAlt;
+			goto RETURN_SUCCESS;
+			break;
+		case 0x36:
+			gmodifiers |= RShift;
+			goto RETURN_SUCCESS;
+			break;
+		// releases
+		case 0xAA:
+			gmodifiers &= ~LShift;
+			goto RETURN_SUCCESS;
+		case 0x9D:
+			gmodifiers &= ~LCtrl;
+			goto RETURN_SUCCESS;
+		case 0xB8:
+			gmodifiers &= ~LAlt;
+			goto RETURN_SUCCESS;
+		case 0xB6:
+			gmodifiers &= ~RShift;
+			goto RETURN_SUCCESS;
+		default:
+			return 1;
 	}
 
-	if (scancode == 0x36) {
-		gmodifiers |= RShift;
-		printk(KERN_INFO "kps2: RShift has been pressed\n");
+RETURN_SUCCESS:
+	return 0;
+}
+
+static irqreturn_t irq_handler(int irq, void* dev_id)
+{
+	static unsigned char 	scancode;
+	int			mod_state;
+
+	scancode = inb(0x60);
+	mod_state = check_for_modifiers(scancode);
+	if (gmodifiers & LShift) {
+		printk(KERN_INFO "kps2: Detected RShift pressed\n");
 		goto FINISH;
+	} else {
+		printk(KERN_INFO "kps2: RShift not pressed or released");
 	}
 
 	printk(KERN_INFO "Pressed a normal key %d\n", scancode);
