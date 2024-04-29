@@ -18,19 +18,25 @@ struct	kps_data {
 
 typedef struct key_data {
 	char	name[16];
-	char	state[9];
 	char	ascii_key[5];
 }	t_key_data;
+
+typedef enum States {
+	Undefined = 0,
+	Pressed,
+	Released,
+} e_states;
 
 struct key_entry
 {
 	unsigned char		keycode;
-	t_key_data			k_data;
+	t_key_data		k_data;
+	e_states		state;
 	struct list_head	list;
 };
 
 extern struct kps_data kps_data;
-extern t_key_data en_us[0x57];
+extern t_key_data en_us[0x5E];
 
 int register_misc_device(void);
 void deregister_misc_device(void);

@@ -67,7 +67,8 @@ void deregister_misc_device(void)
 	while (!list_empty(&kps_data.entries)) {
 		entry = list_first_entry(&kps_data.entries,
 			struct key_entry, list);
-		printk(KERN_INFO "%s: 0x%x - %s\n", __func__, entry->keycode, entry->k_data.name);
+		if (strcmp(entry->k_data.name, "None"))
+			printk(KERN_INFO "%s: 0x%x - %s\n", __func__, entry->keycode, entry->k_data.name);
 		list_del(&entry->list);
 		kfree(entry);
 	}
