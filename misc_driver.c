@@ -8,29 +8,30 @@ static ssize_t etx_misc_write(struct file *file, const char __user *buffer,
 	(void)count;
 	(void)ppos;
 	printk(KERN_DEBUG "kps2: attempt to write\n");
+
 	return 0;
 }
 
 static ssize_t etx_misc_read(struct file *file, char __user *buffer,
 							 size_t len, loff_t *offset)
 {
-	(void)file;
-	(void)buffer;
-	(void)len;
-	(void)offset;
+	struct key_entry	*entry;
+	int					c;
+
+	while (!list_empty(&kps_data.entries))
+	{
+		entry = list_first_entry(&kps_data.entries, struct key_entry, list);
+		c = entry->k_data.ascii_key == 0x0 ? ' ' : entry->k_data.ascii_key;
+		// TODO write to user buffer
+//		snprintf(msg, sizeof(msg), "%s(%c)\n", entry->k_data.name, c);
+		printk(KERN_INFO "%s(%c)\n",
+			   entry->k_data.name, c);
+		list_del(&entry->list);
+		kfree(entry);
+	}
 	printk(KERN_DEBUG "kps2: attempt to read\n");
 	return 0;
 }
-
-//static int etx_misc_open(void)
-//{
-//	return 0;
-//}
-//
-//static int etc_misc_release(void)
-//{
-//	return 0;
-//}
 
 struct file_operations fops = {
 	.write = etx_misc_write,
