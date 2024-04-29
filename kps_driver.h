@@ -11,6 +11,19 @@
 
 extern struct miscdevice etx_misc_device;
 
+typedef enum {
+	None = 0,
+	RShift = 1 << 0,
+	LShift = 1 << 1,
+	Capslock = 1 << 2,
+	RCtrl = 1 << 3,
+	LCtrl = 1 << 4,
+	RAlt = 1 << 5,
+	LAlt = 1 << 6,
+} Modifiers;
+
+extern Modifiers gmodifiers;
+
 struct	kps_data {
 	struct mutex		lock;
 	struct list_head	entries;
@@ -18,7 +31,7 @@ struct	kps_data {
 
 typedef struct key_data {
 	char	name[16];
-	char	ascii_key[5];
+	int		ascii_key;
 }	t_key_data;
 
 typedef enum States {

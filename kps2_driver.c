@@ -8,23 +8,12 @@ MODULE_VERSION("0.01");
 static int irq = 1;
 static unsigned int cookie = 0xdeadd00d;
 
+Modifiers gmodifiers = None;
+
 struct kps_data kps_data = {
 	.lock = __MUTEX_INITIALIZER(kps_data.lock),
 	.entries = LIST_HEAD_INIT(kps_data.entries),
 };
-
-typedef enum {
-	None = 0,
-	RShift = 1 << 0,
-	LShift = 1 << 1,
-	Capslock = 1 << 2,
-	RCtrl = 1 << 3,
-	LCtrl = 1 << 4,
-	RAlt = 1 << 5,
-	LAlt = 1 << 6,
-} Modifiers;
-
-Modifiers gmodifiers = None;
 
 static void check_for_modifiers(unsigned char scancode)
 {
@@ -67,8 +56,10 @@ static irqreturn_t irq_handler(int ir, void* dev_id)
 
 	scancode = inb(0x60);
 	check_for_modifiers(scancode);
-	if (new_node(scancode))
-		return -ENOMEM;
+	if ((scancode >= 0x01 && scancode <= 0x5d)
+		|| (scancode >= 0x81 && scancode <= 0xDD))
+		if (new_node(scancode))
+			return -ENOMEM;
 
 //	c = kbdus[scancode];
 //	if (c >= 0x20 && c <= 0x7e) {
