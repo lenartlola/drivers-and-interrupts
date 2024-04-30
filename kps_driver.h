@@ -9,6 +9,8 @@
 #include <linux/miscdevice.h>
 #include <linux/list.h>
 #include <linux/seq_file.h>
+#include <linux/ktime.h>
+#include <linux/rtc.h>
 
 extern struct miscdevice ct_misc_device;
 
@@ -28,11 +30,12 @@ extern Modifiers gmodifiers;
 struct	kps_data {
 	struct mutex		lock;
 	struct list_head	entries;
+	unsigned int		aLen;
 };
 
 typedef struct key_data {
-	char	name[16];
-	int		ascii_key;
+	char			name[16];
+	int			ascii_key;
 }	t_key_data;
 
 typedef enum States {
@@ -46,6 +49,9 @@ struct key_entry
 	unsigned char		keycode;
 	t_key_data		k_data;
 	e_states		state;
+	int			hh;
+	int			mm;
+	int			ss;
 	struct list_head	list;
 };
 

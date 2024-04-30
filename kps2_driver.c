@@ -13,6 +13,7 @@ Modifiers gmodifiers = None;
 struct kps_data kps_data = {
 	.lock = __MUTEX_INITIALIZER(kps_data.lock),
 	.entries = LIST_HEAD_INIT(kps_data.entries),
+	.aLen = 0,
 };
 
 static void check_for_modifiers(unsigned char scancode)
@@ -21,6 +22,9 @@ static void check_for_modifiers(unsigned char scancode)
 		// presses
 		case 0x2A:
 			gmodifiers |= LShift;
+			break;
+		case 0x3A:
+			gmodifiers |= Capslock;
 			break;
 		case 0x1D:
 			gmodifiers |= LCtrl;
@@ -34,6 +38,9 @@ static void check_for_modifiers(unsigned char scancode)
 		// releases
 		case 0xAA:
 			gmodifiers &= ~LShift;
+			break;
+		case 0xBA:
+			gmodifiers &= ~Capslock;
 			break;
 		case 0x9D:
 			gmodifiers &= ~LCtrl;
@@ -59,15 +66,20 @@ static irqreturn_t irq_handler(int ir, void* dev_id)
 		|| (scancode >= 0x81 && scancode <= 0xDD))
 	{
 		if (new_node(scancode))
-			return -ENOMEM;
+			goto FREE_FATAL;
 	}
 
 	return IRQ_HANDLED;
+FREE_FATAL:
+	synchronize_irq(irq);
+	free_irq(irq, &cookie);
+	deregister_misc_device();
+	return -1;
 }
 
 static int __init keyboard_ps2(void)
 {
-	int	ret;
+	int		ret;
 
 	printk(KERN_INFO "%s: init...\n", __func__);
 	ret = register_misc_device();
@@ -79,7 +91,6 @@ static int __init keyboard_ps2(void)
 		deregister_misc_device();
 		return ret;
 	}
-	printk(KERN_INFO "%s: irq(%d) has been trigerred, res: %d\n", __func__, irq, ret);
 	return ret;
 }
 
@@ -89,7 +100,6 @@ static void __exit mod_exit(void)
 	synchronize_irq(irq);
 	free_irq(irq, &cookie);
 	deregister_misc_device();
-	printk(KERN_INFO "%s: cleaned up...\n", __func__);
 }
 
 module_init(keyboard_ps2);

