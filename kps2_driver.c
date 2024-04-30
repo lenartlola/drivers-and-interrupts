@@ -52,19 +52,15 @@ static void check_for_modifiers(unsigned char scancode)
 static irqreturn_t irq_handler(int ir, void* dev_id)
 {
 	static unsigned char 	scancode;
-//	unsigned char			c;
 
 	scancode = inb(0x60);
 	check_for_modifiers(scancode);
 	if ((scancode >= 0x01 && scancode <= 0x5d)
 		|| (scancode >= 0x81 && scancode <= 0xDD))
+	{
 		if (new_node(scancode))
 			return -ENOMEM;
-
-//	c = kbdus[scancode];
-//	if (c >= 0x20 && c <= 0x7e) {
-//		printk(KERN_INFO "ps2: key has been pressed: %c\n", c);
-//	}
+	}
 
 	return IRQ_HANDLED;
 }

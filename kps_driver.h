@@ -8,8 +8,9 @@
 #include <linux/fs.h>
 #include <linux/miscdevice.h>
 #include <linux/list.h>
+#include <linux/seq_file.h>
 
-extern struct miscdevice etx_misc_device;
+extern struct miscdevice ct_misc_device;
 
 typedef enum {
 	None = 0,
