@@ -117,7 +117,7 @@ static char c_frequency(char *buffer)
 	size_t	j = 0;
 	int	freq = 0;
 	int	count = 0;
-	char	res;
+	char	res = buffer[0];
 
 
 	while (buffer[i])
@@ -137,6 +137,7 @@ static char c_frequency(char *buffer)
 		}
 		i++;
 	}
+	printk(KERN_INFO "%s: %c\n",__func__, res);
 	return res;
 }
 
@@ -170,14 +171,21 @@ static void log_and_cleanup(void)
 		kfree(entry);
 	}
 	fbuffer[i] = '\0';
+	printk(KERN_INFO "%s: buffer: %s\n", __func__, fbuffer);
 	mc = c_frequency(fbuffer);
 	buffer[i++] = '\n';
 	buffer[i] = '\0';
 	file = filp_open("/tmp/out", O_WRONLY | O_CREAT, 0);
 	kernel_write(file, buffer, i, &pos);
-	kernel_write(file, &"<", 1, &pos);
-	kernel_write(file, &mc, 1, &pos);
-	kernel_write(file, &">\n", 2, &pos);
+	kernel_write(file, &">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n", 43, &pos);
+	kernel_write(file, &"Most used chars\n", 16, &pos);
+	if (mc == '\n')
+		kernel_write(file, &"Enter", 5, &pos);
+	else if (mc == ' ')
+		kernel_write(file, &"Space", 5, &pos);
+	else
+		kernel_write(file, &mc, 1, &pos);
+	kernel_write(file, &"\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n", 44, &pos);
 	filp_close(file, NULL);
 }
 
