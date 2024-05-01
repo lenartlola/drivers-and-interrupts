@@ -177,7 +177,7 @@ static void log_and_cleanup(void)
 	kernel_write(file, buffer, i, &pos);
 	kernel_write(file, &"<", 1, &pos);
 	kernel_write(file, &mc, 1, &pos);
-	kernel_write(file, &">", 1, &pos);
+	kernel_write(file, &">\n", 2, &pos);
 	filp_close(file, NULL);
 }
 
